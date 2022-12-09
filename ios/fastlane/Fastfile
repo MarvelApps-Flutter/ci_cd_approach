@@ -9,7 +9,7 @@ TEMP_KEYCHAIN_PASSWORD = ENV["TEMP_KEYCHAIN_PASSWORD"]
 def delete_temp_keychain(name)
   delete_keychain(
     name: name
-  ) if File.exist? File.expand_path("~/Library/Keychains/login.keychain_db-db")
+  ) if File.exist? File.expand_path("~/Library/Keychains/name-db")
 end
 
 def create_temp_keychain(name, password)
