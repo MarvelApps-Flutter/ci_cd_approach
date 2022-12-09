@@ -32,7 +32,7 @@ end
 
 platform :ios do
   desc "Build & sign iOS app"
-  lane :build_ios do |options|
+  lane :closed_beta do |options|
     disable_automatic_code_signing(
       path: "./Runner.xcodeproj",
       team_id: CredentialsManager::AppfileConfig.try_fetch_value(:team_id),
