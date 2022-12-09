@@ -6,7 +6,7 @@ PROVISIONING_PROFILE_SPECIFIER = ENV["PROVISIONING_PROFILE_SPECIFIER"]
 TEMP_KEYCHAIN_USER = "#{ENV["TEMP_KEYCHAIN_USER"]}"
 TEMP_KEYCHAIN_PASSWORD = "#{ENV["TEMP_KEYCHAIN_PASSWORD"]}"
 
-def ensure_temp_keychain(name)
+def delete_temp_keychain(name)
   delete_keychain(
     name: name
   ) if File.exist? File.expand_path("~/Library/Keychains/login.keychain-db")
@@ -28,8 +28,8 @@ end
 
 platform :ios do
   lane :closed_beta do
-    keychain_name = TEMP_KEYCHAIN_USER
-    keychain_password = TEMP_KEYCHAIN_PASSWORD
+    keychain_name = "name"
+    keychain_password = "Test@123"
     ensure_temp_keychain(keychain_name, keychain_password)
     match(
       type: 'appstore',
