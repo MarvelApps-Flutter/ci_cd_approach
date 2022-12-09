@@ -8,8 +8,8 @@ TEMP_KEYCHAIN_PASSWORD = ENV["TEMP_KEYCHAIN_PASSWORD"]
 
 def delete_temp_keychain(name)
   delete_keychain(
-    name: name
-  ) if File.exist? File.expand_path("~/Library/Keychains/#{name}-db")
+    name: "name"
+  ) if File.exist? File.expand_path("~/Library/Keychains/name-db")
 end
 
 def create_temp_keychain(name, password)
@@ -22,14 +22,14 @@ def create_temp_keychain(name, password)
 end
 
 def ensure_temp_keychain(name, password)
-  delete_temp_keychain(name)
-  create_temp_keychain(name, password)
+  delete_temp_keychain("name")
+  create_temp_keychain("name", "Test@123")
 end
 
 platform :ios do
   lane :closed_beta do
-    keychain_name = TEMP_KEYCHAIN_USER
-    keychain_password = TEMP_KEYCHAIN_PASSWORD
+    keychain_name = "name"
+    keychain_password = "Test@123"
     ensure_temp_keychain(keychain_name, keychain_password)
 
     match(
