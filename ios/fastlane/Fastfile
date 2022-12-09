@@ -1,67 +1,80 @@
+# Automatically update fastlane
+update_fastlane
+
 default_platform(:ios)
 
-DEVELOPER_APP_ID = ENV["DEVELOPER_APP_ID"]
-DEVELOPER_APP_IDENTIFIER = ENV["DEVELOPER_APP_IDENTIFIER"]
-PROVISIONING_PROFILE_SPECIFIER = ENV["PROVISIONING_PROFILE_SPECIFIER"]
-TEMP_KEYCHAIN_USER = "#{ENV["TEMP_KEYCHAIN_USER"]}"
-TEMP_KEYCHAIN_PASSWORD = "#{ENV["TEMP_KEYCHAIN_PASSWORD"]}"
+# Default temporary keychain password and name, if not included from environment
+TEMP_KEYCHAIN_NAME_DEFAULT = "name"
+TEMP_KEYCHAN_PASSWORD_DEFAULT = "Test@123"
 
+# Remove the temporary keychain, if it exists
 def delete_temp_keychain(name)
   delete_keychain(
     name: name
-  ) if File.exist? File.expand_path("~/Library/Keychains/login.keychain-db")
+  ) if File.exist? File.expand_path("~/Library/Keychains/#{name}-db")
 end
 
+# Create the temporary keychain with name and password
 def create_temp_keychain(name, password)
   create_keychain(
     name: name,
     password: password,
-    unlock: true,
-    timeout: 0
+    unlock: false,
+    timeout: false
   )
 end
 
+# Ensure we have a fresh, empty temporary keychain
 def ensure_temp_keychain(name, password)
   delete_temp_keychain(name)
   create_temp_keychain(name, password)
 end
 
 platform :ios do
-  lane :closed_beta do
-    keychain_name = "name"
-    keychain_password = "Test@123"
+  desc "Build & sign iOS app"
+  lane :build_ios do |options|
+    disable_automatic_code_signing(
+      path: "./Runner.xcodeproj",
+      team_id: CredentialsManager::AppfileConfig.try_fetch_value(:team_id),
+      profile_name: "match AppStore #{CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)}",
+      code_sign_identity: "iPhone Distribution"
+    )
+    keychain_name = ENV['TEMP_KEYCHAIN_NAME'] || TEMP_KEYCHAIN_NAME_DEFAULT
+    keychain_password = ENV['TEMP_KEYCHAIN_PASSWORD'] || TEMP_KEYCHAN_PASSWORD_DEFAULT
     ensure_temp_keychain(keychain_name, keychain_password)
     match(
-      type: 'appstore',
-      app_identifier: "#{DEVELOPER_APP_IDENTIFIER}",
-      git_basic_authorization: Base64.strict_encode64(ENV["GIT_AUTHORIZATION"]),
-      readonly: true,
+      app_identifier: CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier),
+      type: "appstore",
+      readonly: is_ci,
       keychain_name: keychain_name,
-      keychain_password: keychain_password 
+      keychain_password: keychain_password
     )
-
-    gym(
-      configuration: "Release",
-      workspace: "Runner.xcworkspace",
-      scheme: "Runner",
-      export_method: "app-store",
+    sh "./flutter_test.sh"
+    sh "./flutter_build.sh --clean"
+    build_ios_app(
       export_options: {
-        provisioningProfiles: { 
-            DEVELOPER_APP_ID => PROVISIONING_PROFILE_SPECIFIER
-        }
+          method: "app-store"
       }
     )
-
-    pilot(
-      apple_id: "#{DEVELOPER_APP_ID}",
-      app_identifier: "#{DEVELOPER_APP_IDENTIFIER}",
-      skip_waiting_for_build_processing: true,
-      skip_submission: true,
-      distribute_external: false,
-      notify_external_testers: false,
-      ipa: "./Runner.ipa"
-    )
-
     delete_temp_keychain(keychain_name)
+  end
+
+  desc "Upload iOS app to app store"
+  lane :deploy_ios do |options|
+    # Upload to test flight or AppStore depending on caller parameters
+    if options[:testflight]
+      upload_to_testflight(
+        skip_submission: true,
+        ipa: "./Runner.ipa"
+      )
+    else
+      deliver(
+        skip_metadata: false,
+        skip_screenshots: true,
+        submit_for_review: true,
+        force: true,
+        ipa: "./Runner.ipa"
+      )
+    end
   end
 end
