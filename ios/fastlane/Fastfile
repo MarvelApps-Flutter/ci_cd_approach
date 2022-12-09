@@ -17,7 +17,7 @@ def create_temp_keychain(name, password)
     name: name,
     password: password,
     unlock: true,
-    timeout: false
+    timeout: 0
   )
 end
 
@@ -30,10 +30,7 @@ platform :ios do
   lane :closed_beta do
     keychain_name = TEMP_KEYCHAIN_USER
     keychain_password = TEMP_KEYCHAIN_PASSWORD
-    puts(user : TEMP_KEYCHAIN_USER)
-    
     ensure_temp_keychain(keychain_name, keychain_password)
-    puts(name : keychain_name)
     match(
       type: 'appstore',
       app_identifier: "#{DEVELOPER_APP_IDENTIFIER}",
