@@ -6,7 +6,7 @@ PROVISIONING_PROFILE_SPECIFIER = ENV["PROVISIONING_PROFILE_SPECIFIER"]
 TEMP_KEYCHAIN_USER = "#{ENV["TEMP_KEYCHAIN_USER"]}"
 TEMP_KEYCHAIN_PASSWORD = "#{ENV["TEMP_KEYCHAIN_PASSWORD"]}"
 
-def delete_temp_keychain(name)
+def ensure_temp_keychain(name)
   delete_keychain(
     name: name
   ) if File.exist? File.expand_path("~/Library/Keychains/login.keychain-db")
