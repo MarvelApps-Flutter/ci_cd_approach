@@ -54,7 +54,7 @@ platform :ios do
     )
 
     pilot(
-      apple_id: "poonam.kalra@successive.tech",
+      apple_id: "1658949359",
       app_identifier: "#{DEVELOPER_APP_IDENTIFIER}",
       skip_waiting_for_build_processing: true,
       skip_submission: true,
